@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TranX 隐私政策</title>
+    <meta name="description" content="TranX — X 悬浮词典 隐私政策" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0f1419;
+        --fg: #e7e9ea;
+        --muted: #8b98a5;
+        --accent: #1d9bf0;
+        --border: rgba(255, 255, 255, 0.1);
+        --card: rgba(255, 255, 255, 0.03);
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f7f9f9;
+          --fg: #0f1419;
+          --muted: #536471;
+          --border: rgba(0, 0, 0, 0.08);
+          --card: #fff;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+        font-size: 16px;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 40px 20px 80px;
+      }
+      header {
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      h1 {
+        font-size: 1.75rem;
+        margin: 0 0 8px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      h2 {
+        font-size: 1.2rem;
+        margin: 2rem 0 0.75rem;
+      }
+      h3 {
+        font-size: 1.05rem;
+        margin: 1.25rem 0 0.5rem;
+      }
+      p,
+      li {
+        color: var(--fg);
+      }
+      ul {
+        padding-left: 1.25rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+        margin: 0.75rem 0 1rem;
+        background: var(--card);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        font-weight: 600;
+      }
+      .note {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      footer {
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>TranX 隐私政策</h1>
+        <p class="meta">
+          最后更新日期：2026-07-26<br />
+          产品名称：TranX — X 悬浮词典<br />
+          适用范围：TranX 浏览器扩展（Chrome / 兼容的 Chromium 浏览器）
+        </p>
+      </header>
+
+      <p class="note">
+        本页为 Chrome 网上应用店等渠道所需的公开隐私政策。扩展安装包内不依赖本页面即可运行。
+      </p>
+
+      <h2>1. 概述</h2>
+      <p>
+        TranX（下称「本扩展」）帮助你在 X（Twitter）网页上查看外语文本的中文释义或翻译，并可收藏英语单词到本地生词本。
+      </p>
+      <p>我们重视隐私。本扩展：</p>
+      <ul>
+        <li><strong>不要求</strong>注册 TranX 账号</li>
+        <li>
+          <strong>不运营</strong>面向用户的自有账号服务器来存储你的生词（当前版本）
+        </li>
+        <li><strong>不会</strong>出售你的个人数据</li>
+        <li><strong>不会</strong>将你的浏览历史用于广告画像</li>
+      </ul>
+
+      <h2>2. 我们处理哪些数据</h2>
+
+      <h3>2.1 保存在你设备上的数据（浏览器存储）</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>数据</th>
+            <th>存储位置</th>
+            <th>用途</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>偏好设置（如是否启用、悬浮延迟、取词语言等）</td>
+            <td><code>chrome.storage.sync</code> 或本地存储（依浏览器实现）</td>
+            <td>
+              记住你的选项；若开启了浏览器账号同步，设置可能随浏览器账号在设备间同步
+            </td>
+          </tr>
+          <tr>
+            <td>英语生词本</td>
+            <td><code>chrome.storage.local</code></td>
+            <td>仅保存<strong>英语词形</strong>与收藏时间；<strong>不保存</strong>释义正文</td>
+          </tr>
+          <tr>
+            <td>查词缓存</td>
+            <td><code>chrome.storage.local</code></td>
+            <td>加快重复查询；可在设置中清除，<strong>不影响</strong>生词本</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        你可随时通过扩展弹窗删除生词、清空生词本或清除查词缓存；也可卸载扩展以删除其本地数据（以浏览器行为为准）。
+      </p>
+
+      <h3>2.2 为提供查词/翻译而发送的数据</h3>
+      <p>
+        当你在页面上悬停或触发查词/翻译时，本扩展的后台脚本会向<strong>第三方词典或翻译服务</strong>发送：
+      </p>
+      <ul>
+        <li>当前查询的<strong>英语单词</strong>，或</li>
+        <li>日语/韩语场景下的<strong>一行文本</strong>（整行翻译）</li>
+      </ul>
+      <p>可能用到的服务域名包括（以扩展 manifest 中的 host_permissions 为准）：</p>
+      <ul>
+        <li><code>dict.youdao.com</code>（有道词典相关接口）</li>
+        <li>
+          <code>api.dictionaryapi.dev</code>（英语词典接口，主要用于音标/英文释义补充）
+        </li>
+        <li>
+          <code>api.mymemory.translated.net</code>（机器翻译，用于整行或兜底）
+        </li>
+        <li>
+          <code>fanyi.baidu.com</code>（若清单中声明，可能用于辅助查询）
+        </li>
+      </ul>
+      <p>
+        这些请求用于返回释义或译文。第三方如何处理请求数据，受其各自隐私政策约束，本扩展开发者无法完全控制。
+      </p>
+
+      <h3>2.3 我们不主动收集的数据</h3>
+      <p>本扩展<strong>不会</strong>故意收集或上传：</p>
+      <ul>
+        <li>你的 X / Twitter 账号密码</li>
+        <li>完整的页面浏览历史列表</li>
+        <li>通讯录、精确地理位置</li>
+        <li>支付信息</li>
+      </ul>
+      <p>
+        内容脚本仅在 <strong>x.com / twitter.com</strong>（及清单中声明的移动/www
+        子域）上运行，用于识别指针下的文本并显示提示层。
+      </p>
+
+      <h2>3. 权限说明（摘要）</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>权限</th>
+            <th>原因</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>storage</code></td>
+            <td>保存设置、生词本与查词缓存</td>
+          </tr>
+          <tr>
+            <td>访问 X/Twitter 页面</td>
+            <td>在帖子文本上提供悬停查词 UI</td>
+          </tr>
+          <tr>
+            <td>访问词典/翻译域名</td>
+            <td>代为请求释义与翻译（避免页面跨域限制）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>4. 数据是否离开你的设备</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>类型</th>
+            <th>是否离开设备</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>设置、生词本、缓存</td>
+            <td>
+              默认留在浏览器存储；设置若走 sync，可能经<strong>浏览器厂商</strong>的同步服务在你的已登录设备间传递，而非本扩展自建服务器
+            </td>
+          </tr>
+          <tr>
+            <td>查词/翻译请求中的词句</td>
+            <td>会发送至上文所述第三方服务</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>当前版本<strong>没有</strong>TranX 自有后端用于上传你的生词本。</p>
+
+      <h2>5. 数据共享</h2>
+      <p>除下列情形外，我们不会出售或出租你的个人数据：</p>
+      <ol>
+        <li><strong>提供功能所必需</strong>：向词典/翻译服务发送查询词句；</li>
+        <li>
+          <strong>法律要求</strong>：在适用法律要求或为保护权利与安全时；
+        </li>
+        <li>
+          <strong>你明确选择的操作</strong>：例如你自行使用「导出」功能把生词本保存为文件并分享给他人。
+        </li>
+      </ol>
+
+      <h2>6. 数据安全</h2>
+      <p>
+        我们采取合理的技术措施（如使用浏览器扩展隔离环境、限制匹配站点）降低滥用风险。但任何网络传输与第三方服务都无法保证绝对安全，请你理解剩余风险。
+      </p>
+
+      <h2>7. 儿童隐私</h2>
+      <p>
+        本扩展不面向 13 岁以下（或你所在司法辖区规定的更高年龄）儿童。若你认为儿童向本扩展相关服务提交了信息，请联系我们以便处理。
+      </p>
+
+      <h2>8. 你的选择</h2>
+      <ul>
+        <li>在扩展内关闭功能、清除缓存、删除或清空生词本</li>
+        <li>使用浏览器提供的站点权限与扩展卸载功能</li>
+        <li>通过导出功能备份生词本后自行保管文件</li>
+      </ul>
+
+      <h2>9. 政策变更</h2>
+      <p>
+        我们可能更新本政策。更新后将修改文首「最后更新日期」，并在可行时通过扩展商店说明或项目页面提示。重大变更后继续使用，即表示你了解更新后的政策（在适用法律允许的范围内）。
+      </p>
+
+      <h2>10. 联系方式</h2>
+      <p>如对本隐私政策有疑问，请联系：</p>
+      <ul>
+        <li>
+          邮箱：
+          <a href="mailto:max1999.dev@gmail.com">max1999.dev@gmail.com</a>
+        </li>
+        <li>
+          项目主页：
+          <a href="https://github.com/0x9579/TranX">https://github.com/0x9579/TranX</a>
+        </li>
+      </ul>
+
+      <h2>11. 第三方服务</h2>
+      <p>
+        第三方政策可能变更，请以对方官网为准，例如有道/网易相关隐私政策、MyMemory /
+        Translated、Free Dictionary API 服务条款，以及 X / Twitter 自身的隐私政策。
+      </p>
+
+      <footer>
+        <p>
+          本文仅用于说明 TranX
+          扩展的数据处理方式，不构成法律意见。源文维护于仓库
+          <code>store/PRIVACY.md</code>。
+        </p>
+        <p>
+          <a href="https://github.com/0x9579/TranX">GitHub 仓库</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -49,6 +49,14 @@ Compress-Archive -Path extension\* -DestinationPath tranx-extension.zip -Force
 
 更多说明见 [`extension/README.md`](./extension/README.md)。
 
+## 隐私政策（公网）
+
+上架与对外披露使用：
+
+**https://0x9579.github.io/TranX/privacy.html**
+
+源文件：`docs/privacy.html`（GitHub Pages，分支 `master`，目录 `/docs`）。
+
 ## 许可证
 
 MIT

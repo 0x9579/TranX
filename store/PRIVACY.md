@@ -4,7 +4,12 @@
 **产品名称：** TranX — X 悬浮词典  
 **适用范围：** TranX 浏览器扩展（Chrome / 兼容的 Chromium 浏览器）
 
-> **上架须知：** 请将本文发布到可公网访问的 **HTTPS** 页面（例如 GitHub Pages、个人站点），把该 URL 填入 Chrome 网上应用店「隐私权政策」字段。扩展安装包内**不必**包含本文件。
+> **公网地址（GitHub Pages）：**  
+> **https://0x9579.github.io/TranX/privacy.html**  
+> （首页 https://0x9579.github.io/TranX/ 会跳转到上述页面）  
+>
+> 将此 URL 填入 Chrome 网上应用店「隐私权政策」字段。扩展安装包内**不必**包含本文件。  
+> 网页版源文件：`docs/privacy.html`（与本文同步维护）。
 
 ---
 
@@ -125,10 +130,8 @@ TranX（下称「本扩展」）帮助你在 X（Twitter）网页上查看外语
 
 如对本隐私政策有疑问，请联系：
 
-- **邮箱：** `YOUR_EMAIL@example.com`  
-- **项目主页 / Issue（可选）：** `https://github.com/YOUR_USER/TranX`  
-
-请将以上占位符替换为你的真实联系方式后再发布公网版本。
+- **邮箱：** [max1999.dev@gmail.com](mailto:max1999.dev@gmail.com)  
+- **项目主页：** [https://github.com/0x9579/TranX](https://github.com/0x9579/TranX)
 
 ---
 

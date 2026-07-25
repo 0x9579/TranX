@@ -23,9 +23,9 @@
 ## 你需要亲自完成的事项
 
 1. **隐私政策上线**  
-   - 编辑 `PRIVACY.md` 文末邮箱与项目链接  
-   - 发布到 GitHub Pages 或其他 HTTPS 站点  
-   - 将 URL 写入商店后台  
+   - 公网页：https://0x9579.github.io/TranX/privacy.html  
+   - 源文件：`docs/privacy.html`（文案与 `PRIVACY.md` 对齐）  
+   - 将上述 URL 写入商店后台  
 
 2. **截图**  
    - 按 `assets/SCREENSHOTS.md` 拍摄 1280×800 图  

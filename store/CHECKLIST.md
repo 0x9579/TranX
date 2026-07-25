@@ -16,9 +16,10 @@
 
 ## B. 隐私与合规材料
 
-- [ ] 完善 [`PRIVACY.md`](./PRIVACY.md) 中的联系邮箱与项目链接  
-- [ ] 将隐私政策发布为 **HTTPS 公网页面**（GitHub Pages / 个人站等）  
-- [ ] 记录隐私政策 URL：`https://________________`  
+- [x] 完善 [`PRIVACY.md`](./PRIVACY.md) 中的联系邮箱与项目链接  
+- [x] 将隐私政策发布为 **HTTPS 公网页面**（GitHub Pages：`docs/`）  
+- [x] 隐私政策 URL：`https://0x9579.github.io/TranX/privacy.html`  
+- [ ] 浏览器打开上述 URL 确认可访问（Pages 首次启用可能需 1–3 分钟）  
 - [ ] 阅读并确认 [`PERMISSIONS.md`](./PERMISSIONS.md) 与当前 `manifest.json` 一致  
 - [ ] 确认无远程可执行代码（不 `eval` 远程脚本、不加载远程 JS 逻辑）  
 - [ ] 确认 `host_permissions` 均为功能必需（未用的域名考虑删除，如百度翻译）  
