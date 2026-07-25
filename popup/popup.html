@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TranX</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="logo" aria-hidden="true">译</div>
+      <div class="titles">
+        <h1>TranX</h1>
+        <p>X 悬浮词典</p>
+      </div>
+      <label class="switch" title="启用 / 关闭">
+        <input type="checkbox" id="enabled" checked />
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab active" data-tab="vocab" role="tab" aria-selected="true">
+        生词本 <span class="tab-count" id="vocabCount">0</span>
+      </button>
+      <button type="button" class="tab" data-tab="settings" role="tab" aria-selected="false">
+        设置
+      </button>
+    </nav>
+
+    <!-- 生词本 -->
+    <section id="panel-vocab" class="panel tab-panel active" role="tabpanel">
+      <div class="vocab-toolbar">
+        <input
+          type="search"
+          id="vocabSearch"
+          class="search"
+          placeholder="搜索单词或释义…"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="vocab-actions">
+        <button type="button" id="exportVocab" class="btn ghost sm">导出</button>
+        <button type="button" id="importVocab" class="btn ghost sm">导入</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+        <button type="button" id="clearVocab" class="btn danger-ghost sm">清空</button>
+      </div>
+
+      <div id="vocabList" class="vocab-list" aria-live="polite"></div>
+      <p id="vocabEmpty" class="empty-state" hidden>
+        还没有生词。<br />
+        在 X 上点击<strong>英语单词</strong>收藏（只存词形，打开时再查释义）。
+      </p>
+    </section>
+
+    <!-- 设置 -->
+    <section id="panel-settings" class="panel tab-panel" role="tabpanel" hidden>
+      <label class="row">
+        <span class="label">悬浮延迟</span>
+        <div class="control">
+          <input type="range" id="delay" min="0" max="800" step="50" value="200" />
+          <span class="value" id="delayValue">200 ms</span>
+        </div>
+      </label>
+
+      <label class="row check">
+        <span class="label">显示音标</span>
+        <input type="checkbox" id="showPhonetic" checked />
+      </label>
+
+      <label class="row check">
+        <span class="label">显示词性</span>
+        <input type="checkbox" id="showPos" checked />
+      </label>
+
+      <label class="row check">
+        <span class="label">附带英文释义</span>
+        <input type="checkbox" id="showEnglish" />
+      </label>
+
+      <label class="row">
+        <span class="label">最短词长</span>
+        <div class="control">
+          <select id="minWordLength">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+      </label>
+
+      <div class="section-title">源语言</div>
+
+      <label class="row">
+        <span class="label">取词语言</span>
+        <div class="control">
+          <select id="sourceLang">
+            <option value="en" selected>英语</option>
+            <option value="ko">韩语</option>
+            <option value="ja">日语</option>
+            <option value="auto">自动</option>
+          </select>
+        </div>
+      </label>
+
+      <p class="hint compact" id="sourceLangHint">
+        仅识别英语单词；<strong>中文永远不会触发</strong>。
+      </p>
+
+      <div class="section-title">点击收藏</div>
+
+      <label class="row">
+        <span class="label">收藏触发</span>
+        <div class="control">
+          <select id="clickInterceptMode">
+            <option value="all" selected>点单词即收藏</option>
+            <option value="nth">连点 N 次收藏</option>
+          </select>
+        </div>
+      </label>
+
+      <label class="row" id="rowClickN">
+        <span class="label">N 次（同一词）</span>
+        <div class="control">
+          <select id="clickInterceptN">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </label>
+
+      <p class="hint compact" id="clickModeHint">
+        <strong>仅当点击落在词上</strong>时拦截并收藏；点卡片空白处会正常进入帖子页。
+      </p>
+
+      <div class="actions">
+        <button type="button" id="clearCache" class="btn ghost">清除词典缓存</button>
+      </div>
+
+      <p class="hint">
+        悬停查词；点在词上收藏/取消。中文不触发。空白、显示更多、点赞等不拦截。
+      </p>
+    </section>
+
+    <footer class="footer">
+      <span>v1.3.2</span>
+      <span>英语收藏 · 日韩整行译</span>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
