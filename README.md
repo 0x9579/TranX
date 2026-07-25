@@ -1,90 +1,53 @@
-# TranX — X (Twitter) 悬浮词典
+# TranX
 
-在 X / Twitter 浏览帖子时，**鼠标悬停**英语 / 韩语 / 日语词即可看到中文释义；**左键点击**可加入 / 移出生词本。**中文永不触发**。
+X (Twitter) 悬浮词典浏览器扩展 —— 英语查词 / 日韩整行译中 / 英语生词本。
 
-![Chrome](https://img.shields.io/badge/Chrome-MV3-blue) ![Edge](https://img.shields.io/badge/Edge-支持-green)
+## 仓库结构
 
-## 功能
-
-- **多语言**：英语按**词**查；日/韩**整行翻译**；**中文不触发**
-- **生词本（仅英语）**：只存词形 + 时间；打开列表时**实时查释义**；日/韩不可收藏
-- **导出 / 导入**：精简 JSON（词 + 时间）
-- **缓存分离**：查词缓存与生词本分开
-
-## 安装（开发者模式）
-
-1. 打开 Chrome / Edge → `chrome://extensions`（Edge：`edge://extensions`）
-2. 打开 **开发者模式**
-3. **加载已解压的扩展程序** → 选择本目录 `TranX`
-4. 打开 [https://x.com](https://x.com) 试用
-
-> 修改代码后：扩展页点 **刷新**，再刷新 X 页面。
-
-## 使用
-
-| 操作 | 说明 |
-|------|------|
-| 悬停词上 | 显示中文释义（依「取词语言」设置） |
-| **左键点击词上** | 拦截并收藏/取消（可配置第 N 次） |
-| **点击卡片空白** | 不拦截，正常进帖 |
-| 中文 | **永不取词** |
-| 显示更多 / 点赞 / 时间等 | 不拦截 |
-| 扩展图标 | 生词本 + 设置（含源语言） |
-
-**生词本（弹窗默认页）**
-
-- 搜索单词或中文释义
-- 单条删除 / 清空（有确认）
-- 导出 JSON / 导入 JSON（合并模式，跳过已有词）
-
-**设置**
-
-- **取词语言**：英语 / 韩语 / 日语 / 自动
-- 总开关、悬浮延迟、音标 / 词性、英文释义（仅英语）、最短词长（主要作用于英语）
-- **点击收藏**：仅拦截「点在词上」；空白处进帖
-- 清除词典缓存（**不影响**生词本）
-
-## 存储说明
-
-| Key | 位置 | 用途 |
-|-----|------|------|
-| `settings` | `chrome.storage.sync` | 偏好设置 |
-| `tranx_dict_cache` | `chrome.storage.local` | 查词缓存，可清 |
-| `tranx_vocab` | `chrome.storage.local` | 英语生词本：`{ "hello": 1720000000000 }`（词 → 时间戳） |
-
-导出（v3）：
-
-```json
-{
-  "version": 3,
-  "app": "TranX",
-  "words": [{ "w": "serendipity", "t": 1720000000000 }]
-}
-```
-
-## 项目结构
-
-```
+```text
 TranX/
-├── manifest.json
-├── background/service-worker.js   # 词典 + 生词本 API
-├── content/content.js|css         # 取词、Tooltip、点击收藏
-├── popup/                         # 生词本列表 + 设置
-├── icons/
-└── README.md
+├── extension/     # 扩展本体（开发者模式加载此目录）
+├── store/         # Chrome 网上应用店上架材料（不进安装包）
+└── README.md      # 本文件
 ```
 
-## 技术说明
+| 目录 | 说明 |
+|------|------|
+| [`extension/`](./extension/) | Manifest V3 扩展源码；详见其中 README |
+| [`store/`](./store/) | 商店文案、隐私政策、截图等骨架；**打包时不要包含** |
 
-- 取词：`document.caretRangeFromPoint` + 字母边界扩展
-- 点击收藏：释义已显示且点击仍是该词时切换；忽略拖选与修饰键
-- 词典请求在 service worker 中完成，避免页面 CORS
+## 开发安装
 
-## 已知限制
+1. Chrome / Edge 打开 `chrome://extensions`（Edge：`edge://extensions`）
+2. 开启 **开发者模式**
+3. **加载已解压的扩展程序** → 选择：
 
-- 依赖第三方词典接口可用性
-- 仅拉丁字母英文词；无跨设备云同步（可用导出/导入）
-- X DOM 大改时选择器可能需微调
+   ```text
+   …/TranX/extension
+   ```
+
+4. 打开 [https://x.com](https://x.com) 试用  
+
+修改代码后：扩展管理页点 **刷新**，再刷新 X 页面。
+
+## 打包（上架 / 分发）
+
+只打包 `extension/` 下的内容，例如：
+
+```powershell
+# 在仓库根目录执行；生成的 zip 内应为 manifest.json 等，不要带 store/
+Compress-Archive -Path extension\* -DestinationPath tranx-extension.zip -Force
+```
+
+**不要**把 `store/`、本 README、`.git` 打进安装包。
+
+## 功能摘要
+
+- 英语：悬停查中文释义，点击收藏（只存词形）
+- 日 / 韩：识别后整行译中；不可收藏
+- 中文：永不触发取词  
+
+更多说明见 [`extension/README.md`](./extension/README.md)。
 
 ## 许可证
 
