@@ -50,7 +50,6 @@ TranX（下称「本扩展」）帮助你在 X（Twitter）网页上查看外语
 - `dict.youdao.com`（有道词典相关接口）  
 - `api.dictionaryapi.dev`（英语词典接口，主要用于音标/英文释义补充）  
 - `api.mymemory.translated.net`（机器翻译，用于整行或兜底）  
-- `fanyi.baidu.com`（若清单中声明，可能用于辅助查询）  
 
 这些请求用于返回释义或译文。第三方如何处理请求数据，受**其各自隐私政策**约束，本扩展开发者无法完全控制。
 
