@@ -158,8 +158,10 @@
           </tr>
           <tr>
             <td>英语生词本</td>
-            <td><code>chrome.storage.local</code></td>
-            <td>仅保存<strong>英语词形</strong>与收藏时间；<strong>不保存</strong>释义正文</td>
+            <td><code>chrome.storage.sync</code>（每词一个键）</td>
+            <td>
+              仅保存<strong>英语词形</strong>与收藏时间；可经浏览器账号跨设备同步；<strong>不保存</strong>释义正文
+            </td>
           </tr>
           <tr>
             <td>查词缓存</td>
@@ -241,10 +243,15 @@
         </thead>
         <tbody>
           <tr>
-            <td>设置、生词本、缓存</td>
+            <td>设置、生词本</td>
             <td>
-              默认留在浏览器存储；设置若走 sync，可能经<strong>浏览器厂商</strong>的同步服务在你的已登录设备间传递，而非本扩展自建服务器
+              使用 <code>chrome.storage.sync</code> 时，可能经
+              <strong>Chrome/Google 同步服务</strong>在你已登录的设备间传递，而非本扩展自建服务器
             </td>
+          </tr>
+          <tr>
+            <td>查词缓存</td>
+            <td>仅本机 local，不同步</td>
           </tr>
           <tr>
             <td>查词/翻译请求中的词句</td>

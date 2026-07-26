@@ -7,7 +7,7 @@
 ## 功能
 
 - **多语言**：英语按**词**查；日/韩**整行翻译**；**中文不触发**
-- **生词本（仅英语）**：只存词形 + 时间；打开列表时**实时查释义**；日/韩不可收藏
+- **生词本（仅英语）**：只存词形 + 时间，经 **`chrome.storage.sync`** 跨设备同步；列表打开时实时查释义；日/韩不可收藏
 - **导出 / 导入**：精简 JSON（词 + 时间）
 - **缓存分离**：查词缓存与生词本分开
 
@@ -50,8 +50,10 @@
 | Key | 位置 | 用途 |
 |-----|------|------|
 | `settings` | `chrome.storage.sync` | 偏好设置 |
-| `tranx_dict_cache` | `chrome.storage.local` | 查词缓存，可清 |
-| `tranx_vocab` | `chrome.storage.local` | 英语生词本：`{ "hello": 1720000000000 }`（词 → 时间戳） |
+| `tv:<word>` | `chrome.storage.sync` | 英语生词：每词一个 key，值为收藏时间戳 |
+| `tranx_dict_cache` | `chrome.storage.local` | 查词缓存（不同步），可清 |
+
+生词本依赖 Chrome 登录同一 Google 账号并开启同步；**非实时**（通常数秒～数分钟）。软上限约 480 词。旧版 local 词库会在启动时自动迁移到 sync。
 
 导出（v3）：
 

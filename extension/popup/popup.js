@@ -48,6 +48,15 @@ async function init() {
   await loadVocab();
   bindSettings();
   bindVocab();
+
+  // 他设备经 Chrome Sync 变更生词本时刷新列表
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'sync') return;
+    const touched = Object.keys(changes).some(
+      (k) => k.startsWith('tv:') || k === 'tranx_vocab'
+    );
+    if (touched) loadVocab();
+  });
 }
 
 function bindTabs() {

@@ -12,7 +12,7 @@
   const TOOLTIP_ID = 'tranx-tooltip';
   const HIGHLIGHT_CLASS = 'tranx-word-highlight';
   const STATUS_PILL_ID = 'tranx-status-pill';
-  const VOCAB_KEY = 'tranx_vocab';
+  const VOCAB_PREFIX = 'tv:';
 
   const RE_LATIN_WORD = /[a-zA-Z']/;
   const RE_HANGUL = /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/;
@@ -97,10 +97,14 @@
       }
       LOG('settings updated', settings);
     }
-    if (area === 'local' && changes[VOCAB_KEY] && currentLang === 'en' && currentWord) {
-      const map = changes[VOCAB_KEY].newValue || {};
-      currentSaved = map[currentWord] != null || map[`en:${currentWord}`] != null;
-      updateSavedBadge();
+    // 生词本：sync 上 tv:<word>
+    if (area === 'sync' && currentLang === 'en' && currentWord) {
+      const sk = `${VOCAB_PREFIX}${currentWord}`;
+      if (Object.prototype.hasOwnProperty.call(changes, sk)) {
+        currentSaved = changes[sk].newValue != null;
+        updateSavedBadge();
+        updateClickHint();
+      }
     }
   });
 
@@ -860,13 +864,12 @@
     const key = vocabKey('en', word);
     if (!key) return false;
     try {
-      const store = await chrome.storage.local.get(VOCAB_KEY);
-      const map = store[VOCAB_KEY] || {};
-      // 新格式 word→timestamp；兼容旧 en:word / 对象
-      if (map[key] != null) return true;
-      if (map[`en:${key}`] != null) return true;
-      if (map[key] && typeof map[key] === 'object') return true;
-      return false;
+      const res = await chrome.runtime.sendMessage({
+        type: 'VOCAB_HAS',
+        word: key,
+        lang: 'en',
+      });
+      return !!res?.saved;
     } catch {
       return false;
     }
@@ -876,49 +879,32 @@
     if (!entry || toggleLock) return;
     toggleLock = true;
     try {
-      const result = await vocabToggle(word);
-      currentSaved = result.saved;
-      currentKey = result.id || vocabKey('en', word);
+      const res = await chrome.runtime.sendMessage({
+        type: 'VOCAB_TOGGLE',
+        word: normalizeSurface(word, 'en'),
+        lang: 'en',
+        entry: { word: entry.word || word, lang: 'en' },
+      });
+      if (!res?.ok) throw new Error(res?.error || '收藏失败');
+      currentSaved = !!res.saved;
+      currentKey = res.id || vocabKey('en', word);
       currentLang = 'en';
       updateSavedBadge();
       updateClickHint();
       LOG('toggle', currentKey, currentSaved);
     } catch (err) {
       LOG('toggle failed', err);
+      // 气泡底部提示错误（无 toast）
+      const hintEl = tooltipEl?.querySelector('.tranx-hint-click');
+      if (hintEl) {
+        hintEl.hidden = false;
+        hintEl.textContent = String(err?.message || err).slice(0, 40);
+      }
     } finally {
       setTimeout(() => {
         toggleLock = false;
       }, 280);
     }
-  }
-
-  /** 仅英语：storage 为 { [word]: addedAt } */
-  async function vocabToggle(rawWord) {
-    const w = normalizeSurface(rawWord, 'en');
-    if (!w) throw new Error('empty word');
-
-    const store = await chrome.storage.local.get(VOCAB_KEY);
-    const map =
-      store[VOCAB_KEY] && typeof store[VOCAB_KEY] === 'object'
-        ? { ...store[VOCAB_KEY] }
-        : {};
-
-    // 清理可能的旧 key
-    const legacy = `en:${w}`;
-    const exists = map[w] != null || map[legacy] != null;
-
-    if (exists) {
-      delete map[w];
-      delete map[legacy];
-      await chrome.storage.local.set({ [VOCAB_KEY]: map });
-      return { saved: false, word: w, lang: 'en', id: w };
-    }
-
-    map[w] = Date.now();
-    // 顺带去掉旧对象形态
-    delete map[legacy];
-    await chrome.storage.local.set({ [VOCAB_KEY]: map });
-    return { saved: true, word: w, lang: 'en', id: w };
   }
 
   function resetStreak() {

@@ -43,9 +43,9 @@ Compress-Archive -Path extension\* -DestinationPath tranx-extension.zip -Force
 
 ## 功能摘要
 
-- 英语：悬停查中文释义，点击收藏（只存词形）
+- 英语：悬停查中文释义，点击收藏（只存词形，**Chrome Sync** 跨设备）
 - 日 / 韩：识别后整行译中；不可收藏
-- 中文：永不触发取词  
+- 中文：永不触发取词
 
 更多说明见 [`extension/README.md`](./extension/README.md)。
 

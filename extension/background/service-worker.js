@@ -2,11 +2,19 @@
  * TranX background service worker
  * - 多语言词典查询（en 查词；ko/ja 整行翻译）
  * - 词典缓存（chrome.storage.local · tranx_dict_cache）
- * - 生词本仅存英语词形（chrome.storage.local · tranx_vocab），释义实时查
+ * - 生词本：英语词形经 chrome.storage.sync 跨设备同步（每词一个 key：tv:<word>）
  */
 
 const CACHE_KEY = 'tranx_dict_cache';
-const VOCAB_KEY = 'tranx_vocab';
+/** 旧版 local 整包 key，仅用于迁移 */
+const VOCAB_LEGACY_LOCAL = 'tranx_vocab';
+/** 若曾把整包误写入 sync 的 key */
+const VOCAB_LEGACY_SYNC_BLOB = 'tranx_vocab';
+/** sync 中每个英语词：tv:hello → addedAt(number) */
+const VOCAB_PREFIX = 'tv:';
+const VOCAB_MIGRATED_FLAG = 'tranx_vocab_migrated_to_sync_v1';
+/** 预留 settings 等，词条约 500 上限提示 */
+const VOCAB_SOFT_MAX = 480;
 const CACHE_MAX = 2000;
 
 const DEFAULT_SETTINGS = {
@@ -39,11 +47,19 @@ chrome.runtime.onInstalled.addListener(async () => {
       settings: { ...DEFAULT_SETTINGS, ...stored.settings },
     });
   }
-  const local = await chrome.storage.local.get(VOCAB_KEY);
-  if (!local[VOCAB_KEY]) {
-    await chrome.storage.local.set({ [VOCAB_KEY]: {} });
+  try {
+    await migrateVocabToSync();
+  } catch (err) {
+    console.warn('[TranX] vocab migrate on install failed', err);
   }
 });
+
+// 浏览器启动时尝试迁移
+if (chrome.runtime.onStartup) {
+  chrome.runtime.onStartup.addListener(() => {
+    migrateVocabToSync().catch(() => {});
+  });
+}
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const handlers = {
@@ -92,7 +108,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     },
     VOCAB_IMPORT: () => importVocab(message.words, message.mode || 'merge'),
     VOCAB_CLEAR: async () => {
-      await chrome.storage.local.set({ [VOCAB_KEY]: {} });
+      await clearVocab();
       return { ok: true };
     },
   };
@@ -140,22 +156,23 @@ function cacheKey(lang, word) {
 }
 
 // ---------------------------------------------------------------------------
-// 生词本：只存英语词 → { [word]: addedAt }
+// 生词本：chrome.storage.sync，每词 key = tv:<word>，value = addedAt
+// 避免单 key 8KB 限制；MAX_ITEMS≈512，软上限约 480 词
 // ---------------------------------------------------------------------------
 
-async function readVocabMap() {
-  const store = await chrome.storage.local.get(VOCAB_KEY);
-  const raw =
-    store[VOCAB_KEY] && typeof store[VOCAB_KEY] === 'object'
-      ? store[VOCAB_KEY]
-      : {};
-  return migrateVocabMap(raw);
+function vocabSyncKey(word) {
+  return `${VOCAB_PREFIX}${word}`;
 }
 
-/** 把旧版丰满结构 / 非英语条目收敛为 word→timestamp */
-function migrateVocabMap(raw) {
+function parseVocabSyncKey(key) {
+  if (!key || !String(key).startsWith(VOCAB_PREFIX)) return null;
+  return String(key).slice(VOCAB_PREFIX.length);
+}
+
+/** 纯函数：任意旧结构 → { [word]: addedAt } */
+function normalizeVocabEntries(raw) {
   const next = {};
-  let dirty = false;
+  if (!raw || typeof raw !== 'object') return next;
 
   for (const [id, item] of Object.entries(raw)) {
     let word = '';
@@ -163,87 +180,131 @@ function migrateVocabMap(raw) {
     let lang = 'en';
 
     if (typeof item === 'number') {
-      word = id.includes(':') ? id.slice(id.indexOf(':') + 1) : id;
+      word = id.startsWith(VOCAB_PREFIX)
+        ? id.slice(VOCAB_PREFIX.length)
+        : id.includes(':')
+          ? id.slice(id.indexOf(':') + 1)
+          : id;
       addedAt = item;
     } else if (item && typeof item === 'object') {
       lang = normalizeLang(item.lang || 'en');
-      word = item.word || item.displayWord || '';
-      addedAt = Number(item.addedAt) || 0;
+      word = item.word || item.displayWord || item.w || '';
+      addedAt = Number(item.addedAt || item.t) || 0;
       if (!word && id.includes(':')) {
         const i = id.indexOf(':');
         const maybe = id.slice(0, i);
-        if (maybe === 'en' || maybe === 'ko' || maybe === 'ja') {
-          lang = maybe;
+        if (maybe === 'en' || maybe === 'ko' || maybe === 'ja' || maybe === 'tv') {
           word = id.slice(i + 1);
-        } else {
-          word = id;
-        }
-      } else if (!word) {
-        word = id;
-      }
-      // 旧结构含 meanings/phonetic 等 → 需要落盘精简
-      if (
-        item.meanings ||
-        item.phonetic ||
-        item.displayWord ||
-        item.id ||
-        item.lang
-      ) {
-        dirty = true;
-      }
+          if (maybe !== 'tv' && maybe !== 'en') lang = maybe;
+        } else word = id;
+      } else if (!word) word = id.startsWith(VOCAB_PREFIX) ? id.slice(3) : id;
     } else if (typeof item === 'string') {
       word = item;
       addedAt = Date.now();
-      dirty = true;
     } else {
-      dirty = true;
       continue;
     }
 
-    // 非英语不进生词本
-    if (lang !== 'en') {
-      dirty = true;
-      continue;
-    }
-
+    if (lang !== 'en') continue;
     word = normalizeWord(word, 'en');
-    if (!word || !/^[a-z]+(?:'[a-z]+)?$/.test(word)) {
-      dirty = true;
-      continue;
-    }
-
-    // 同词保留较早收藏时间
-    if (!next[word] || (addedAt && addedAt < next[word])) {
-      next[word] = addedAt || Date.now();
-    }
-    if (id !== word || typeof item !== 'number') dirty = true;
-  }
-
-  if (dirty) {
-    chrome.storage.local.set({ [VOCAB_KEY]: next }).catch(() => {});
+    if (!word || !/^[a-z]+(?:'[a-z]+)?$/.test(word)) continue;
+    const t = addedAt || Date.now();
+    if (!next[word] || t < next[word]) next[word] = t;
   }
   return next;
 }
 
-async function writeVocabMap(map) {
-  await chrome.storage.local.set({ [VOCAB_KEY]: map });
+let migratePromise = null;
+
+async function migrateVocabToSync() {
+  if (migratePromise) return migratePromise;
+  migratePromise = (async () => {
+    const flag = await chrome.storage.local.get(VOCAB_MIGRATED_FLAG);
+    const local = await chrome.storage.local.get(VOCAB_LEGACY_LOCAL);
+    const syncAll = await chrome.storage.sync.get(null);
+
+    const fromLocal = normalizeVocabEntries(local[VOCAB_LEGACY_LOCAL]);
+    const fromSyncBlob = normalizeVocabEntries(syncAll[VOCAB_LEGACY_SYNC_BLOB]);
+    const fromSyncKeys = {};
+    for (const [k, v] of Object.entries(syncAll)) {
+      const w = parseVocabSyncKey(k);
+      if (w) fromSyncKeys[w] = typeof v === 'number' ? v : Number(v) || Date.now();
+    }
+
+    // 合并：保留较早收藏时间
+    const merged = { ...fromSyncKeys };
+    for (const src of [fromSyncBlob, fromLocal]) {
+      for (const [w, t] of Object.entries(src)) {
+        if (!merged[w] || t < merged[w]) merged[w] = t;
+      }
+    }
+
+    const toWrite = {};
+    for (const [w, t] of Object.entries(merged)) {
+      const sk = vocabSyncKey(w);
+      if (syncAll[sk] !== t) toWrite[sk] = t;
+    }
+
+    if (Object.keys(toWrite).length) {
+      await setSyncInBatches(toWrite);
+    }
+
+    // 清掉 legacy 整包，避免超 8KB / 重复
+    if (syncAll[VOCAB_LEGACY_SYNC_BLOB] != null) {
+      await chrome.storage.sync.remove(VOCAB_LEGACY_SYNC_BLOB);
+    }
+    if (local[VOCAB_LEGACY_LOCAL] != null) {
+      await chrome.storage.local.remove(VOCAB_LEGACY_LOCAL);
+    }
+    await chrome.storage.local.set({ [VOCAB_MIGRATED_FLAG]: true });
+  })().finally(() => {
+    migratePromise = null;
+  });
+  return migratePromise;
 }
 
-function findVocabWord(map, rawWord) {
-  const w = normalizeWord(rawWord, 'en');
-  if (!w) return { key: null, addedAt: 0 };
-  if (map[w] != null) return { key: w, addedAt: Number(map[w]) || 0 };
-  // 兼容旧 key en:word
-  const legacy = `en:${w}`;
-  if (map[legacy] != null) return { key: legacy, addedAt: Number(map[legacy]) || 0 };
-  return { key: w, addedAt: 0, missing: true };
+async function setSyncInBatches(obj, batchSize = 40) {
+  const entries = Object.entries(obj);
+  for (let i = 0; i < entries.length; i += batchSize) {
+    const chunk = Object.fromEntries(entries.slice(i, i + batchSize));
+    try {
+      await chrome.storage.sync.set(chunk);
+    } catch (err) {
+      const msg = String(err?.message || err);
+      if (/QUOTA|quota|MAX_ITEMS|MAX_WRITE/i.test(msg)) {
+        throw new Error(
+          'Chrome 同步存储空间或写入频率不足。请精简生词本、确认已登录并开启同步后重试。'
+        );
+      }
+      throw err;
+    }
+  }
+}
+
+async function readVocabMap() {
+  await migrateVocabToSync();
+  const all = await chrome.storage.sync.get(null);
+  const map = {};
+  for (const [k, v] of Object.entries(all)) {
+    const w = parseVocabSyncKey(k);
+    if (!w) continue;
+    map[w] = typeof v === 'number' ? v : Number(v) || 0;
+  }
+  // 兼容尚未拆完的 blob
+  if (all[VOCAB_LEGACY_SYNC_BLOB]) {
+    Object.assign(map, normalizeVocabEntries(all[VOCAB_LEGACY_SYNC_BLOB]));
+  }
+  return map;
 }
 
 async function isInVocab(rawWord, lang) {
   if (normalizeLang(lang || 'en') !== 'en') return false;
-  const map = await readVocabMap();
-  const found = findVocabWord(map, rawWord);
-  return !found.missing && found.key != null && map[found.key] != null;
+  const w = normalizeWord(rawWord, 'en');
+  if (!w) return false;
+  await migrateVocabToSync();
+  const sk = vocabSyncKey(w);
+  const cur = await chrome.storage.sync.get(sk);
+  return cur[sk] != null;
 }
 
 async function listVocab() {
@@ -257,18 +318,19 @@ async function listVocab() {
 }
 
 async function removeVocab(rawWord, _lang, id) {
-  const map = await readVocabMap();
-  const key = normalizeWord(id || rawWord, 'en');
-  if (key && map[key] != null) {
-    delete map[key];
-    await writeVocabMap(map);
-    return;
-  }
-  const found = findVocabWord(map, rawWord);
-  if (found.key && map[found.key] != null) {
-    delete map[found.key];
-    await writeVocabMap(map);
-  }
+  const w = normalizeWord(id || rawWord, 'en');
+  if (!w) return;
+  await migrateVocabToSync();
+  await chrome.storage.sync.remove(vocabSyncKey(w));
+}
+
+async function clearVocab() {
+  await migrateVocabToSync();
+  const all = await chrome.storage.sync.get(null);
+  const keys = Object.keys(all).filter(
+    (k) => k.startsWith(VOCAB_PREFIX) || k === VOCAB_LEGACY_SYNC_BLOB
+  );
+  if (keys.length) await chrome.storage.sync.remove(keys);
 }
 
 async function toggleVocab(rawWord, entry, lang) {
@@ -279,29 +341,55 @@ async function toggleVocab(rawWord, entry, lang) {
   const w = normalizeWord(rawWord || entry?.word, 'en');
   if (!w) throw new Error('empty word');
 
-  const map = await readVocabMap();
-  if (map[w] != null) {
-    delete map[w];
-    await writeVocabMap(map);
+  await migrateVocabToSync();
+  const sk = vocabSyncKey(w);
+  const cur = await chrome.storage.sync.get(sk);
+
+  if (cur[sk] != null) {
+    await chrome.storage.sync.remove(sk);
     return { ok: true, saved: false, word: w, lang: 'en', id: w };
   }
 
-  map[w] = Date.now();
-  await writeVocabMap(map);
+  const map = await readVocabMap();
+  if (Object.keys(map).length >= VOCAB_SOFT_MAX) {
+    throw new Error(
+      `生词本已接近同步上限（约 ${VOCAB_SOFT_MAX} 词）。请删除部分词后再收藏。`
+    );
+  }
+
+  const t = Date.now();
+  try {
+    await chrome.storage.sync.set({ [sk]: t });
+  } catch (err) {
+    const msg = String(err?.message || err);
+    if (/QUOTA|quota|MAX_ITEMS|MAX_WRITE/i.test(msg)) {
+      throw new Error(
+        '无法写入 Chrome 同步存储（配额或频率限制）。请确认已登录 Google 账号并开启扩展同步。'
+      );
+    }
+    throw err;
+  }
+
   return {
     ok: true,
     saved: true,
     word: w,
     lang: 'en',
     id: w,
-    entry: { word: w, addedAt: map[w] },
+    entry: { word: w, addedAt: t },
   };
 }
 
 async function importVocab(words, mode) {
   if (!Array.isArray(words)) throw new Error('invalid import data');
+  await migrateVocabToSync();
 
-  const next = mode === 'replace' ? {} : await readVocabMap();
+  if (mode === 'replace') {
+    await clearVocab();
+  }
+
+  const existing = await readVocabMap();
+  const toWrite = {};
   let imported = 0;
   let skipped = 0;
 
@@ -332,17 +420,32 @@ async function importVocab(words, mode) {
       continue;
     }
 
-    if (mode === 'merge' && next[w] != null) {
+    if (mode === 'merge' && existing[w] != null) {
       skipped++;
       continue;
     }
 
-    next[w] = addedAt;
+    toWrite[vocabSyncKey(w)] = addedAt;
+    existing[w] = addedAt;
     imported++;
   }
 
-  await writeVocabMap(next);
-  return { ok: true, imported, skipped, count: Object.keys(next).length };
+  if (Object.keys(existing).length > VOCAB_SOFT_MAX) {
+    throw new Error(
+      `导入后将超过约 ${VOCAB_SOFT_MAX} 词的同步软上限，请减少词条后重试。`
+    );
+  }
+
+  if (Object.keys(toWrite).length) {
+    await setSyncInBatches(toWrite);
+  }
+
+  return {
+    ok: true,
+    imported,
+    skipped,
+    count: Object.keys(existing).length,
+  };
 }
 
 // ---------------------------------------------------------------------------
